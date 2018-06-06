@@ -1,0 +1,4 @@
+.vscode/*
+.ipynb_checkpoints/*
+docker-app/pgdata
+docker-app/app/data*

@@ -1,0 +1,64 @@
+version: '3.3'
+services:
+  crawler:
+    image: python:3.6-alpine
+    depends_on:
+      - postgres
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://postgres/todos
+      USER: root
+      PASSWORD: toor
+      DB: phishtank
+      PORT: 5432
+    networks:
+      - banco
+  postgres:
+    image: postgres:9.6.2-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor   
+      POSTGRES_DB: phishtank
+    ports:
+      - 5432:5432
+    volumes: 
+      - ./pgdata/:/var/lib/postgresql/data/
+    networks: 
+      - banco
+  pgadmin4:
+    image: dpage/pgadmin4
+    ports:
+      - 8001:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: gbc@icomp.ufam.edu.br
+      PGADMIN_DEFAULT_PASSWORD: 12345
+    depends_on:
+      - postgres
+    networks:
+      - banco
+  jupyter:
+    image: continuumio/anaconda3
+    networks: 
+      - banco
+    depends_on: 
+      - postgres
+    command: /bin/bash -c "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks --ip=0.0.0.0 --port=8888 --no-browser --allow-root"
+    ports: 
+      - 8888:8888
+    volumes: 
+      - ./notebooks:/opt/notebooks
+  cronjobber:
+    image: docker:edge
+    depends_on: 
+      - crawler
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    command: >
+        sh -c "
+        echo '* * * * * docker exec crawler printenv | grep MSG' > /etc/crontabs/root
+        && crond -f"
+networks:
+  banco:
