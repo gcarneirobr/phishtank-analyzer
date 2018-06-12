@@ -12,4 +12,4 @@ RUN apk update && \
 
 COPY . .
 
-CMD [ "python", "./crawler.py" ]
+CMD [ "python", "-u", "./crawler.py" ]

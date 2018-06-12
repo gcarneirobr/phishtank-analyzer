@@ -1,21 +1,5 @@
 version: '3.3'
 services:
-  crawler:
-    image: python:3.6-alpine
-    depends_on:
-      - postgres
-    volumes:
-      - ./app:/usr/src/app
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgres://postgres/todos
-      USER: root
-      PASSWORD: toor
-      DB: phishtank
-      PORT: 5432
-    networks:
-      - banco
   postgres:
     image: postgres:9.6.2-alpine
     environment:
@@ -28,6 +12,23 @@ services:
       - ./pgdata/:/var/lib/postgresql/data/
     networks: 
       - banco
+  crawler:
+    build: app/python-build
+    depends_on:
+      - postgres
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - 8000:8000
+    environment:
+      DATABASE_URL: postgres://postgres/todos
+      USER: root
+      PASSWORD: toor
+      DB: phishtank
+      PORT: 5432
+      PYTHONUNBUFFERED: 0
+    networks:
+      - banco
   pgadmin4:
     image: dpage/pgadmin4
     ports:
@@ -39,6 +40,8 @@ services:
       - postgres
     networks:
       - banco
+    volumes: 
+      - ./app/pgadmin:/var/lib/pgadmin
   jupyter:
     image: continuumio/anaconda3
     networks: 

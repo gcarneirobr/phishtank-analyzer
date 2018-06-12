@@ -1,10 +1,13 @@
-import json, requests, pprint, hashlib, psycopg2, sys, os
+import json, requests, pprint, hashlib, psycopg2, sys, os, base64 
 
 MAX_RETRIES_SITES = 3
 MAX_RETRIES_JSON = 10
 DSN = "host='postgres' dbname='phishtank' user='root' password='toor'"
 URL_PHISHTANK = 'http://data.phishtank.com/data/d13a110a290419da26da6f9088c6f18ecd2cedc4636a451e76a97841828cd6c3/online-valid.json'
 
+dictColumns = {'phish_id' : 0, 'url' : 1, 'online' : 2, 'target' : 3, 'submission_time' : 4, 'verified' : 5,
+                    'verification_time' : 6, 'hash' : 7, 'details_ip_address' : 8, 'details_cidr_block' : 9,
+                    'detail_time' : 10, 'details_rir' : 11, 'details_announcing_network' : 12, 'crawler_verified': 13}
 TEST = True
 
 conn = psycopg2.connect(DSN)
@@ -47,8 +50,6 @@ def getPhishingFromDatabase(columns):
     return rows
 
 def processJson(json, rows):
-    pprint.pprint(rows)
-
     for phishing in json:
         if not (int(phishing['phish_id']),) in rows:
             storePhishing(phishing)
@@ -71,47 +72,50 @@ def storePhishing(phishing):
     conn.commit()
 
 def processDatabase():
-    columns = 'phish_id, online, target, submission_time, verified, verification_time, hash, details_ip_address, details_cidr_block'
+    columns = 'phish_id, url, online, target, submission_time, verified, verification_time, hash, details_ip_address, details_cidr_block, detail_time, details_rir, details_announcing_network, crawler_verified'
     phishingList = getPhishingFromDatabase(columns) 
-    
+
     for phishing in phishingList: 
+        currentSiteData = getCurrentDataFromSite(phishing[dictColumns['url']])
         
-        currentSiteData = getCurrentDataFromSite(phishing)
-        
-        if (phishing['online'] != currentSiteData['online']) or (phishing['hash'] != currentSiteData['hash']):
+        if (phishing[dictColumns['online']] != currentSiteData['online']) or (phishing[dictColumns['hash']] != currentSiteData['hash']):
             storeChanges(phishing, currentSiteData)
     
 def storeChanges(phishing, currentData):
 
-    if phishing['hash'] is not None:
+    if phishing[dictColumns['crawler_verified']]:
         updateSql = 'update phish set valid_until = now() where phish_id = %s and valid_until is null'
         insertSql = ('insert into phish (id, phish_id, url, '
                     ' submission_time, verified, verification_time, online, target, '
-                    ' details_ip_address, details_cidr_block, details_announcing_network, details_rir, detail_time, hash)'
+                    ' details_ip_address, details_cidr_block, details_announcing_network, details_rir, detail_time, hash, crawler_verified)'
                     ' values '
-                    ' (nextval(\'phish_sequence\'), %s, \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\',  '
-                    ' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', %s')
+                    ' (nextval(\'phish_sequence\'), %s, %s, %s, %s, %s, %s, %s,  '
+                    ' %s, %s, %s, %s, %s, %s, true)')
         
-        data = (phishing['phish_id'], phishing['url'], phishing['submission_time'],
-                phishing['verified'], phishing['verification_time'], currentData['online'], phishing['target'],
-                phishing['details'][0]['ip_address'], phishing['details'][0]['cidr_block'], phishing['details'][0]['announcing_network'],
-                phishing['details'][0]['rir'], phishing['details'][0]['detail_time'], currentData['hash'])
+        data = (phishing[dictColumns['phish_id']], phishing[dictColumns['url']], phishing[dictColumns['submission_time']],
+                phishing[dictColumns['verified']], phishing[dictColumns['verification_time']], currentData['online'], phishing[dictColumns['target']],
+                phishing[dictColumns['details_ip_address']], phishing[dictColumns['details_cidr_block']], phishing[dictColumns['details_announcing_network']],
+                phishing[dictColumns['details_rir']], phishing[dictColumns['detail_time']], 
+                currentData['hash'] if currentData['online'] == phishing[dictColumns['online']] and currentData['hash'] != None else phishing[dictColumns['hash']])
 
-        cur.execute(updateSql, phishing['phish_id'])
+        cur.execute(updateSql, (phishing[dictColumns['phish_id']],))
         conn.commit()
         cur.execute(insertSql, data)
         conn.commit()
     else: 
-        updateSql = 'update phish set hash = %s where phish_id = %s'
-        cur.execute(updateSql, (currentData['hash'], phishing['phish_id']))
+        updateSql = 'update phish set hash = %s, online = %s, crawler_verified = true where phish_id = %s'
+        cur.execute(updateSql, (currentData['hash'], currentData['online'], phishing[dictColumns['phish_id']]))
         conn.commit()
 
-
-def getCurrentDataFromSite(phishing):
+def getCurrentDataFromSite(urlPhishing):
     result = {}
     content = ''
-    result['online'], content = crawlSite(phishing['url'])
-    result['hash'] = hashContent(content)
+    result['online'], content = crawlSite(urlPhishing)
+    
+    if (result['online']):
+        result['hash'] = hashContent(content)
+    else: 
+        result['hash'] = None
 
     return result
 
@@ -124,27 +128,35 @@ def crawlSite(url):
     retries = 0
     getConnection = False
     conteudo = ''
-    while retries < MAX_RETRIES_SITES or getConnection:
+    while retries < MAX_RETRIES_SITES and not getConnection:
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0'
             }
-            r = requests.get(url=URL_PHISHTANK, headers=headers, timeout=1)
+            r = requests.get(url=url, headers=headers, timeout=1)
             conteudo = r.text.encode()
+            #pprint.pprint(url)
+            #pprint.pprint(conteudo)
+            #pprint.pprint(r.status_code)
             if r.status_code == 200:
                 getConnection = True
+            else: 
+                retries += 1
         except requests.ConnectionError:
             retries += 1
         except requests.RequestException:
             retries += 1
-            retries += 1
+
     if not getConnection:
         return False, None
     else:
         return True, conteudo
 
 def hashContent(sourceCode): 
-    hash_obj = hashlib.sha256(sourceCode)
+
+
+    contentEncoded = base64.b64encode(sourceCode)
+    hash_obj = hashlib.sha1(contentEncoded)
     hash = hash_obj.hexdigest()
 
     return hash
