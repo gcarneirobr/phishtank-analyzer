@@ -8,7 +8,7 @@ URL_PHISHTANK = 'http://data.phishtank.com/data/d13a110a290419da26da6f9088c6f18e
 dictColumns = {'phish_id' : 0, 'url' : 1, 'online' : 2, 'target' : 3, 'submission_time' : 4, 'verified' : 5,
                     'verification_time' : 6, 'hash' : 7, 'details_ip_address' : 8, 'details_cidr_block' : 9,
                     'detail_time' : 10, 'details_rir' : 11, 'details_announcing_network' : 12, 'crawler_verified': 13}
-TEST = True
+TEST = False
 
 conn = psycopg2.connect(DSN)
 cur = conn.cursor()
@@ -17,28 +17,40 @@ def getJsonPhishtank():
 
     if TEST: 
         return True, mockJson()
-  
+
     retries = 0
     getConnection = False
     conteudo = ''
+    pprint.pprint("Recuperando JSON do Phishtank")
+
     while retries < MAX_RETRIES_JSON or getConnection:
         try:
+            
             headers = {
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0'
             }
+            pprint.pprint("Início da tentativa")
             r = requests.get(url=URL_PHISHTANK, headers=headers, timeout=2)
-            conteudo = r.json
             if r.status_code == 200:
+                conteudo = r.json
                 getConnection = True
+            else:
+                retries += 1
+            pprint.pprint("Fim da tentativa - Status: %s" %  r.status_code)
         except requests.ConnectionError:
+            pprint.pprint("valeime")
             retries += 1
         except requests.RequestException:
             retries += 1
+            pprint.pprint("aqui moco")
         except:
+            pprint.pprint("vish")
             retries += 1
     if not getConnection:
         return False, ''
+        pprint.pprint("Falha ao recuperar JSON")
     else:
+        pprint.pprint("JSON Recuperado")
         return True, conteudo
 
 def getPhishingFromDatabase(columns):
@@ -83,7 +95,14 @@ def processDatabase():
     
 def storeChanges(phishing, currentData):
 
+ 
     if phishing[dictColumns['crawler_verified']]:
+
+        pprint.pprint ("-------------------")
+        pprint.pprint("Registrando mudanças id: %s" % phishing[dictColumns['phish_id']])
+        pprint.pprint("Database online: %s, Database hash: %s" % phishing[dictColumns['online']], phishing[dictColumns['hash']])
+        pprint.pprint("Atual online: %s, Atual hash: %s" % currentData['online'], currentData['hash'])
+        
         updateSql = 'update phish set valid_until = now() where phish_id = %s and valid_until is null'
         insertSql = ('insert into phish (id, phish_id, url, '
                     ' submission_time, verified, verification_time, online, target, '
@@ -117,6 +136,7 @@ def getCurrentDataFromSite(urlPhishing):
     else: 
         result['hash'] = None
 
+    pprint.pprint("hash = %s" % result['hash'])
     return result
 
 
@@ -128,6 +148,8 @@ def crawlSite(url):
     retries = 0
     getConnection = False
     conteudo = ''
+    pprint.pprint("---------------------")
+    pprint.pprint("Recuperando site %s" % url)
     while retries < MAX_RETRIES_SITES and not getConnection:
         try:
             headers = {
@@ -135,9 +157,9 @@ def crawlSite(url):
             }
             r = requests.get(url=url, headers=headers, timeout=1)
             conteudo = r.text.encode()
-            #pprint.pprint(url)
+            pprint.pprint(url)
             #pprint.pprint(conteudo)
-            #pprint.pprint(r.status_code)
+            pprint.pprint(r.status_code)
             if r.status_code == 200:
                 getConnection = True
             else: 
