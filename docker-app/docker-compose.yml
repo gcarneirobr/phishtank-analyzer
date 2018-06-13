@@ -10,14 +10,17 @@ services:
       - 5432:5432
     volumes: 
       - ./pgdata/:/var/lib/postgresql/data/
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
     networks: 
       - banco
   crawler:
-    build: app/python-build
+    build: app/python-build 
     depends_on:
       - postgres
     volumes:
       - ./app:/usr/src/app
+      - ./cron:/usr/src/cron
     ports:
       - 8000:8000
     environment:
@@ -53,15 +56,5 @@ services:
       - 8888:8888
     volumes: 
       - ./notebooks:/opt/notebooks
-  cronjobber:
-    image: docker:edge
-    depends_on: 
-      - crawler
-    volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    command: >
-        sh -c "
-        echo '* * * * * docker exec crawler printenv | grep MSG' > /etc/crontabs/root
-        && crond -f"
 networks:
   banco:
