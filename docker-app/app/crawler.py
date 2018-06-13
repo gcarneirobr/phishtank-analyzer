@@ -3,7 +3,7 @@ import json, requests, pprint, hashlib, psycopg2, sys, os, base64
 MAX_RETRIES_SITES = 3
 MAX_RETRIES_JSON = 10
 DSN = "host='postgres' dbname='phishtank' user='root' password='toor'"
-URL_PHISHTANK = 'http://data.phishtank.com/data/d13a110a290419da26da6f9088c6f18ecd2cedc4636a451e76a97841828cd6c3/online-valid.json'
+URL_PHISHTANK = 'http://data.phishtank.com/data/4767f0fdc6c970b12e5618b13774d43d4494937eec415493af02653993b90361/online-valid.json'
 
 dictColumns = {'phish_id' : 0, 'url' : 1, 'online' : 2, 'target' : 3, 'submission_time' : 4, 'verified' : 5,
                     'verification_time' : 6, 'hash' : 7, 'details_ip_address' : 8, 'details_cidr_block' : 9,
@@ -30,7 +30,7 @@ def getJsonPhishtank():
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0'
             }
             pprint.pprint("Início da tentativa")
-            r = requests.get(url=URL_PHISHTANK, headers=headers, timeout=2)
+            r = requests.get(url=URL_PHISHTANK, headers=headers, timeout=600)
             if r.status_code == 200:
                 conteudo = r.json
                 getConnection = True
@@ -47,8 +47,8 @@ def getJsonPhishtank():
             pprint.pprint("vish")
             retries += 1
     if not getConnection:
-        return False, ''
         pprint.pprint("Falha ao recuperar JSON")
+        return False, ''
     else:
         pprint.pprint("JSON Recuperado")
         return True, conteudo
@@ -218,4 +218,4 @@ def main():
 
 if __name__ == '__main__':
     status = main()
-
+    
