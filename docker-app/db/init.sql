@@ -1,24 +1,28 @@
--- Database: phishtank
+    -- Database: phishtank
 
--- DROP DATABASE phishtank;
+    -- DROP DATABASE phishtank;
 
-/* CREATE DATABASE phishtank
-    WITH 
-    OWNER = postgres
-    ENCODING = 'UTF8'
-    LC_COLLATE = 'en_US.utf8'
-    LC_CTYPE = 'en_US.utf8'
-    TABLESPACE = pg_default
-    CONNECTION LIMIT = -1;
+     CREATE DATABASE phishtank
+        WITH 
+        OWNER = postgres
+        ENCODING = 'UTF8'
+        LC_COLLATE = 'en_US.utf8'
+        LC_CTYPE = 'en_US.utf8'
+        TABLESPACE = pg_default
+        CONNECTION LIMIT = -1;
 
--- Table: public.phish
- */
+    -- Table: public.phish
+    
+    -- DROP TABLE public.phish;
+    -- Table: public.phish
+
+    -- DROP TABLE public.phish;
+
+   -- Table: public.phish
+
 -- DROP TABLE public.phish;
--- Table: public.phish
 
--- DROP TABLE public.phish;
-
-CREATE TABLE IF NOT EXISTS public.phish
+CREATE TABLE public.phish
 (
     id integer NOT NULL,
     phish_id integer NOT NULL,
@@ -35,6 +39,7 @@ CREATE TABLE IF NOT EXISTS public.phish
     valid_until timestamp with time zone,
     detail_time timestamp with time zone,
     verification_time timestamp with time zone,
+    crawler_verified boolean DEFAULT false,
     CONSTRAINT phish_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -44,12 +49,11 @@ TABLESPACE pg_default;
 
 ALTER TABLE public.phish
     OWNER to root;
+    -- SEQUENCE: public.phish_sequence
 
--- SEQUENCE: public.phish_sequence
+    -- DROP SEQUENCE public.phish_sequence;
 
--- DROP SEQUENCE public.phish_sequence;
+    CREATE SEQUENCE IF NOT EXISTS public.phish_sequence;
 
-CREATE SEQUENCE IF NOT EXISTS public.phish_sequence;
-
-ALTER SEQUENCE public.phish_sequence
-    OWNER TO root;
+    ALTER SEQUENCE public.phish_sequence
+        OWNER TO root;
