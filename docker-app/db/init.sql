@@ -1,18 +1,5 @@
-    -- Database: phishtank
 
-    -- DROP DATABASE phishtank;
-
-     CREATE DATABASE phishtank
-        WITH 
-        OWNER = postgres
-        ENCODING = 'UTF8'
-        LC_COLLATE = 'en_US.utf8'
-        LC_CTYPE = 'en_US.utf8'
-        TABLESPACE = pg_default
-        CONNECTION LIMIT = -1;
-
-    -- Table: public.phish
-    
+    -- Table: public.phish    
     -- DROP TABLE public.phish;
     -- Table: public.phish
 
