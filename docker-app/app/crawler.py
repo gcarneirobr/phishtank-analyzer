@@ -64,6 +64,7 @@ def getPhishingFromDatabase(columns):
 def processJson(json, rows):
     for phishing in json:
         if not (int(phishing['phish_id']),) in rows:
+            pprint.pprint("Gravando no banco de dados: %s" % phishing[dictColumns['phish_id']])
             storePhishing(phishing)
     
 
@@ -155,7 +156,7 @@ def crawlSite(url):
     getConnection = False
     conteudo = ''
     pprint.pprint("---------------------")
-    pprint.pprint("Recuperando site %s" % url)
+    pprint.pprint("Recuperando site %s"     % url)
     while retries < MAX_RETRIES_SITES and not getConnection:
         try:
             headers = {
@@ -228,12 +229,12 @@ def main():
         processJson(currentJson, phishingList)
         processDatabase()
         status = 0 
-    return status
 
     fim = time.ctime()
 
     pprint.pprint("Inicio: %s" % inicio)
     pprint.pprint("Fim: %s" % fim) 
-
+    
+    return status
 if __name__ == '__main__':
     status = main()
