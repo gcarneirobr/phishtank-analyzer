@@ -86,10 +86,19 @@ def storePhishing(phishing):
 def processDatabase():
     columns = 'phish_id, url, online, target, submission_time, verified, verification_time, hash, details_ip_address, details_cidr_block, detail_time, details_rir, details_announcing_network, crawler_verified'
     phishingList = getPhishingFromDatabase(columns) 
+    
+    processados = 0
+    totalList = len(phishingList)
+
+    pprint.pprint("Inicio do processamento dos dados do banco de dados")
 
     for phishing in phishingList: 
-        currentSiteData = getCurrentDataFromSite(phishing[dictColumns['url']])
         
+        currentSiteData = getCurrentDataFromSite(phishing[dictColumns['url']])
+        processados += 1
+
+        pprint.pprint("Andamento: {0:.0f}%".format(processados*100/totalList))
+
         if (phishing[dictColumns['online']] != currentSiteData['online']) or (phishing[dictColumns['hash']] != currentSiteData['hash']):
             storeChanges(phishing, currentSiteData)
     
@@ -201,7 +210,7 @@ def mockJson():
     return mockData
 
 def main():
-
+    inicio = time.ctime()
     phishingList = getPhishingFromDatabase('phish_id')
     connect, currentJson = getJsonPhishtank()
     status = 1
@@ -212,6 +221,11 @@ def main():
         processDatabase()
         status = 0 
     return status
+
+    fim = time.ctime()
+
+    pprint.pprint("Inicio: %s" % inicio)
+    pprint.pprint("Fim: %s" % fim) 
 
 if __name__ == '__main__':
     status = main()
