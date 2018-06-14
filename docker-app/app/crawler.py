@@ -64,9 +64,9 @@ def getPhishingFromDatabase(columns):
 def processJson(json, rows):
     for phishing in json:
         if not (int(phishing['phish_id']),) in rows:
-            pprint.pprint("Gravando no banco de dados: %s" % (phishing[dictColumns['phish_id']],))
+            pprint.pprint("Gravando no banco de dados: %s" % (phishing['phish_id'],))
             storePhishing(phishing)
-    
+
 
 def storePhishing(phishing):
     insertSql = ('insert into phish (id, phish_id, url, '
