@@ -64,7 +64,7 @@ def getPhishingFromDatabase(columns):
 def processJson(json, rows):
     for phishing in json:
         if not (int(phishing['phish_id']),) in rows:
-            pprint.pprint("Gravando no banco de dados: %s" % phishing[dictColumns['phish_id']])
+            pprint.pprint("Gravando no banco de dados: %s" % (phishing[dictColumns['phish_id']],))
             storePhishing(phishing)
     
 
@@ -106,7 +106,7 @@ def processDatabase():
 def storeChanges(phishing, currentData):
     if phishing[dictColumns['crawler_verified']]:
         pprint.pprint ("-------------------")
-        pprint.pprint("Registrando mudanças id: %s" % phishing[dictColumns['phish_id']])
+        pprint.pprint("Registrando mudanças id: %s" % (phishing[dictColumns['phish_id']],))
         pprint.pprint("Database online: %s, Database hash: %s" % (phishing[dictColumns['online']], phishing[dictColumns['hash']]))
         pprint.pprint("Atual online: %s, Atual hash: %s" % (currentData['online'], currentData['hash']))
         
