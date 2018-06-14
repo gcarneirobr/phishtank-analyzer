@@ -174,7 +174,7 @@ def crawlSite(url):
             pprint.pprint(str(ce))
             retries += 1
         except requests.RequestException as re:
-            pprint.pprint(str(ce))
+            pprint.pprint(str(re))
             retries += 1
         except Exception as ex:
             pprint.pprint(str(ex))
