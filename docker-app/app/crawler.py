@@ -1,9 +1,9 @@
-import json, requests, pprint, hashlib, psycopg2, sys, os, base64 
+import json, requests, pprint, hashlib, psycopg2, sys, os, base64, time
 
 MAX_RETRIES_SITES = 3
 MAX_RETRIES_JSON = 10
 DSN = "host='postgres' dbname='phishtank' user='root' password='toor'"
-URL_PHISHTANK = 'http://data.phishtank.com/data/4767f0fdc6c970b12e5618b13774d43d4494937eec415493af02653993b90361/online-valid.json'
+URL_PHISHTANK = 'http://data.phishtank.com/data/d13a110a290419da26da6f9088c6f18ecd2cedc4636a451e76a97841828cd6c3/online-valid.json'
 
 dictColumns = {'phish_id' : 0, 'url' : 1, 'online' : 2, 'target' : 3, 'submission_time' : 4, 'verified' : 5,
                     'verification_time' : 6, 'hash' : 7, 'details_ip_address' : 8, 'details_cidr_block' : 9,
@@ -23,16 +23,15 @@ def getJsonPhishtank():
     conteudo = ''
     pprint.pprint("Recuperando JSON do Phishtank")
 
-    while retries < MAX_RETRIES_JSON or getConnection:
+    while retries < MAX_RETRIES_JSON and not getConnection:
         try:
-            
             headers = {
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0'
             }
             pprint.pprint("Início da tentativa")
             r = requests.get(url=URL_PHISHTANK, headers=headers, timeout=600)
             if r.status_code == 200:
-                conteudo = r.json
+                conteudo = r.json()
                 getConnection = True
             else:
                 retries += 1
@@ -46,6 +45,7 @@ def getJsonPhishtank():
         except:
             pprint.pprint("vish")
             retries += 1
+
     if not getConnection:
         pprint.pprint("Falha ao recuperar JSON")
         return False, ''
@@ -94,13 +94,10 @@ def processDatabase():
             storeChanges(phishing, currentSiteData)
     
 def storeChanges(phishing, currentData):
-
- 
     if phishing[dictColumns['crawler_verified']]:
-
         pprint.pprint ("-------------------")
         pprint.pprint("Registrando mudanças id: %s" % phishing[dictColumns['phish_id']])
-        pprint.pprint("Database online: %s, Database hash: %s" % phishing[dictColumns['online']], phishing[dictColumns['hash']])
+        pprint.pprint("Database online: %s, Database hash: %s" % (phishing[dictColumns['online']], phishing[dictColumns['hash']]))
         pprint.pprint("Atual online: %s, Atual hash: %s" % currentData['online'], currentData['hash'])
         
         updateSql = 'update phish set valid_until = now() where phish_id = %s and valid_until is null'
@@ -141,7 +138,7 @@ def getCurrentDataFromSite(urlPhishing):
 
 
 def storeJsonData(output): 
-    with open('data.txt', 'w') as outfile:
+    with open('data %s.json' % time.ctime(), 'w') as outfile:
         json.dump(output, outfile)
 
 def crawlSite(url): 
@@ -195,7 +192,7 @@ def mockJson():
         for jsonEntry in jsonData[:100]:
             entries.append(jsonEntry)
 
-        with open(path,'w') as mock:
+        with open(path, 'w') as mock:
             json.dump(entries, mock)
 
     with open(path) as mockFile:
@@ -207,8 +204,8 @@ def main():
 
     phishingList = getPhishingFromDatabase('phish_id')
     connect, currentJson = getJsonPhishtank()
-
     status = 1
+
     if connect: 
         storeJsonData(currentJson)
         processJson(currentJson, phishingList)
@@ -218,4 +215,3 @@ def main():
 
 if __name__ == '__main__':
     status = main()
-    
