@@ -98,7 +98,7 @@ def storeChanges(phishing, currentData):
         pprint.pprint ("-------------------")
         pprint.pprint("Registrando mudanças id: %s" % phishing[dictColumns['phish_id']])
         pprint.pprint("Database online: %s, Database hash: %s" % (phishing[dictColumns['online']], phishing[dictColumns['hash']]))
-        pprint.pprint("Atual online: %s, Atual hash: %s" % currentData['online'], currentData['hash'])
+        pprint.pprint("Atual online: %s, Atual hash: %s" % (currentData['online'], currentData['hash'])
         
         updateSql = 'update phish set valid_until = now() where phish_id = %s and valid_until is null'
         insertSql = ('insert into phish (id, phish_id, url, '
