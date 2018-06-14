@@ -36,14 +36,14 @@ def getJsonPhishtank():
             else:
                 retries += 1
             pprint.pprint("Fim da tentativa - Status: %s" %  r.status_code)
-        except requests.ConnectionError:
-            pprint.pprint("valeime")
+        except requests.ConnectionError as ce:
+            pprint.pprint(str(ce))
             retries += 1
-        except requests.RequestException:
+        except requests.RequestException as re:
             retries += 1
-            pprint.pprint("aqui moco")
+            pprint.pprint(str(re))
         except:
-            pprint.pprint("vish")
+            pprint.pprint("Erro!")
             retries += 1
 
     if not getConnection:
