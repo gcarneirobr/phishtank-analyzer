@@ -170,9 +170,17 @@ def crawlSite(url):
                 getConnection = True
             else: 
                 retries += 1
-        except requests.ConnectionError:
+        except requests.ConnectionError as ce:
+            pprint.pprint(str(ce))
             retries += 1
-        except requests.RequestException:
+        except requests.RequestException as re:
+            pprint.pprint(str(ce))
+            retries += 1
+        except Exception as ex:
+            pprint.pprint(str(ex))
+            retries += 1
+        except: 
+            pprint.pprint("Erro!")
             retries += 1
 
     if not getConnection:
