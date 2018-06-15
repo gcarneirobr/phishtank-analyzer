@@ -104,6 +104,7 @@ def processDatabase():
             storeChanges(phishing, currentSiteData)
     
 def storeChanges(phishing, currentData):
+    
     if phishing[dictColumns['crawler_verified']]:
         pprint.pprint ("-------------------")
         pprint.pprint("Registrando mudanças id: %s" % (phishing[dictColumns['phish_id']],))
@@ -122,7 +123,7 @@ def storeChanges(phishing, currentData):
                 phishing[dictColumns['verified']], phishing[dictColumns['verification_time']], currentData['online'], phishing[dictColumns['target']],
                 phishing[dictColumns['details_ip_address']], phishing[dictColumns['details_cidr_block']], phishing[dictColumns['details_announcing_network']],
                 phishing[dictColumns['details_rir']], phishing[dictColumns['detail_time']], 
-                currentData['hash'] if currentData['online'] == phishing[dictColumns['online']] and currentData['hash'] != None else phishing[dictColumns['hash']])
+                currentData['hash'])
 
         cur.execute(updateSql, (phishing[dictColumns['phish_id']],))
         conn.commit()
