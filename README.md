@@ -1,4 +1,4 @@
-#Phishtank Analyzer
+# Phishtank Analyzer
 
 A complete enviroment for analysis of changing content on websites listed as phishing for a certain period of time. 
 This was used for support the final paper on Software Engineering bachelor degreee. 
